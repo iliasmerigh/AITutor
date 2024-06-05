@@ -12,8 +12,8 @@ from typing import Dict, Union, List, Any, Tuple
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
 from utils import read_jsonl, write_json
-from models.model_base import PreTrainedModelWrapper
-from models.model_dpo import AutoDPOModelForCausalLM, AutoDPOModelForSeq2SeqLM
+from model.model_base import PreTrainedModelWrapper
+from model.model_dpo import AutoDPOModelForCausalLM, AutoDPOModelForSeq2SeqLM
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("mnlp-2024-auto-evaluator")

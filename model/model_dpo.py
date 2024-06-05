@@ -258,7 +258,7 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
             chosen_logps.append(chosen_logp.item())
             rejected_logps.append(rejected_logp.item())
 
-        # Convert the lists to tensors
+        # Convert the lists to tensor
         chosen_logps = torch.tensor(chosen_logps).view(-1)
         rejected_logps = torch.tensor(rejected_logps).view(-1)
 
@@ -363,6 +363,50 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
         ########################################################################
 
         return output_dict
+    
+    def load_documents(self, path= "../documents"):
+        """
+        Load the documents from the given path.
+
+        Args:
+            path (`str`): The path to the documents.
+        Returns:
+            documents (`list`): A list of documents.
+        """
+        documents = []
+
+        with open(path, "r") as f:
+            for line in f:
+                documents.append(line.strip())
+
+        return documents
+    
+    def retrieve_top_documents(user_prompt, path= "../documents", top_k=3):
+        """
+        Retrieve the top k documents based on the given query.
+
+        Args:
+            user_prompt (`str`): The query to retrieve the documents.
+            path (`str`): The path to the documents.
+            top_k (`int`): The number of documents to retrieve.
+        Returns:
+            top_documents (`list`): A list of top k documents.
+        """
+        top_documents = []
+
+        # TODO
+
+        return None
+    
+    def generate_rag_answer(self, user_prompt, **generate_kwargs):
+        # Retrieve documents based on the input prompt
+        retrieved_docs = retrieve_top_documents(user_prompt)
+        augmented_prompt = user_prompt + '\nAnswer the question above based on the following informations:' + ' '.join(retrieved_docs)
+
+        # Generate response using the augmented prompt
+        generated_response = self.pretrained_model.generate(augmented_prompt, **generate_kwargs)
+
+        return generated_response
 
 class AutoDPOModelForSeq2SeqLM(PreTrainedModelWrapper):
     r"""
