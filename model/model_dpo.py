@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM
-from models.model_base import PreTrainedModelWrapper
+from model.model_base import PreTrainedModelWrapper
 
 class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
     """
@@ -243,27 +243,24 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
         for prompt, chosen, rejected in zip(batch["prompt"], batch["chosen"], batch["rejected"]):
             
             # Truncate inputs to respect model's max length
-            chosen_input = tokenizer(prompt + chosen, return_tensors="pt", truncation=True, max_length=1024)
-            rejected_input = tokenizer(prompt + rejected, return_tensors="pt", truncation=True, max_length=1024)
+            chosen_input = tokenizer(prompt + " " + chosen, return_tensors="pt", truncation=True, max_length=1024)
+            rejected_input = tokenizer(prompt  + " " + rejected, return_tensors="pt", truncation=True, max_length=1024)
 
+            # Forward pass through the model
             chosen_output = self.forward(**chosen_input)
             rejected_output = self.forward(**rejected_input)
 
+            # Calculate log softmax and sum over all tokens
             chosen_logp = F.log_softmax(chosen_output.logits, dim=-1).sum() / len(chosen_output.logits)
             rejected_logp = F.log_softmax(rejected_output.logits, dim=-1).sum() / len(rejected_output.logits)
 
+            # Append the log probabilities to the output lists
             chosen_logps.append(chosen_logp.item())
             rejected_logps.append(rejected_logp.item())
 
+        # Convert the lists to tensors
         chosen_logps = torch.tensor(chosen_logps).view(-1)
         rejected_logps = torch.tensor(rejected_logps).view(-1)
-
-
-        #chosen_logps = torch.tensor(chosen_logps).view(len(batch['prompt']))
-        #rejected_logps = torch.tensor(rejected_logps).view(len(batch['prompt']))
-
-        #print(chosen_logps, rejected_logps)
-        ###############################################################
 
         return chosen_logps, rejected_logps
 
@@ -337,7 +334,32 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
         # ======================================================================
         # You need to return one letter prediction for each question.
         # ======================================================================
-        raise NotImplementedError
+        
+        for item in batch:
+
+            question = item["question"]
+            choices = item["choices"]
+            
+            for choice in choices:
+
+                # Truncate inputs to respect model's max length
+                input = tokenizer(question + " " + choice, return_tensors="pt", truncation=True, max_length=1024)
+
+                # Forward pass through the model
+                output = self.forward(**input)
+
+                # Get the logits from the model output
+                logits = output.logits
+
+                # Get the index of the highest logit
+                pred = torch.argmax(logits)
+
+                # Map the pred to the letter
+                pred = chr(pred + 65)
+
+                # Append the prediction to the output dictionary
+                output_dict["preds"].append(pred)
+
         ########################################################################
 
         return output_dict
