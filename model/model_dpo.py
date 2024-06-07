@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+import faiss
 
 from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM
 from model.model_base import PreTrainedModelWrapper
@@ -48,8 +49,8 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
         super().__init__(pretrained_model, **kwargs)
 
         self.documents = self.load_documents(documents_folder)
-        self.vectorizer = TfidfVectorizer()
-        self.document_vectors = self.vectorizer.fit_transform(self.documents)
+        self.document_vectors = self.vectorize_documents(self.documents)
+        self.index = self.create_faiss_index(self.document_vectors)
 
         if not any(hasattr(self.pretrained_model, attribute) for attribute in self.lm_head_namings):
             raise ValueError("The model does not have a language model head, please use a model that has one.")
@@ -388,39 +389,40 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
 
         return documents
     
-    def retrieve_top_documents(self, user_prompt, tokenizer, path= "../documents", top_k=3):
-        """
-        Retrieve the top k documents based on the given query.
-
-        Args:
-            user_prompt (`str`): The query to retrieve the documents.
-            tokenizer (`PreTrainedTokenizerBase`): The tokenizer used to tokenize the input data.
-            path (`str`): The path to the documents.
-            top_k (`int`): The number of documents to retrieve.
-        Returns:
-            top_documents (`list`): A list of top k documents.
-        """
-
-        # Vectorize the query
-        query_vector = self.vectorizer.transform([user_prompt])
-
-        # Calculate cosine similarity between the query and all documents
-        similarities = cosine_similarity(query_vector, self.document_vectors).flatten()
-
-        # Get the indices of the top_k documents with highest similarity scores
-        top_indices = np.argsort(similarities)[-top_k:]
-
-        # Retrieve the corresponding documents
-        return [documents[i] for i in reversed(top_indices)]
+    def vectorize_documents(self, documents):
+        
+        # Example: Using TF-IDF to vectorize documents
+        vectorizer = TfidfVectorizer()
+        return vectorizer.fit_transform(documents).toarray()
     
-    def generate_answer_with_rag(self, user_prompt, **generate_kwargs):
-        # Retrieve documents based on the input prompt
-        retrieved_docs = retrieve_top_documents(user_prompt)
-        augmented_prompt = user_prompt + '\nAnswer the question above based on the following informations:' + ' '.join(retrieved_docs)
+    def create_faiss_index(self, document_vectors):
 
+        # Get the dimension of the document vectors
+        dimension = document_vectors.shape[1]
+        # Create the index
+        index = faiss.IndexFlatL2(dimension)
+        # Add the document vectors to the index
+        index.add(document_vectors)
+
+        return index
+    
+    def retrieve_documents(self, user_prompt, top_k=3):
+
+        # Assuming the query is already vectorized and normalized if necessary
+        query_vector = self.vectorizer.transform([user_prompt]).toarray()
+        _, top_indices = self.index.search(query_vector, top_k)
+
+        return [self.documents[i] for i in top_indices.flatten()]
+    
+    def generate(self, user_prompt, **generate_kwargs):
+
+        # Retrieve documents based on the input prompt
+        retrieved_docs = self.retrieve_documents(user_prompt)
+        augmented_prompt = user_prompt + '\nAnswer the question above based on the following informations:' + ' '.join(retrieved_docs)
+        
         # Generate response using the augmented prompt
         generated_response = self.pretrained_model.generate(augmented_prompt, **generate_kwargs)
-
+        
         return generated_response
 
 class AutoDPOModelForSeq2SeqLM(PreTrainedModelWrapper):

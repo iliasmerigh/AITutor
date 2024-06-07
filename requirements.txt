@@ -9,3 +9,5 @@ accelerate
 torch
 bitsandbytes
 peft
+faiss-cpu
+faiss-gpu
