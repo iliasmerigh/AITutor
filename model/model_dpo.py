@@ -1,9 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM
 from model.model_base import PreTrainedModelWrapper
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
     """
@@ -31,7 +34,7 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
     supported_args = ()
     ####################################################################################
 
-    def __init__(self, pretrained_model, **kwargs):
+    def __init__(self, pretrained_model, documents_folder="../documents", **kwargs):
         r"""
         Initializes the model.
 
@@ -43,6 +46,10 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
                 Additional keyword arguments, that are passed to any `CustomModule` class.
         """
         super().__init__(pretrained_model, **kwargs)
+
+        self.documents = self.load_documents(documents_folder)
+        self.vectorizer = TfidfVectorizer()
+        self.document_vectors = self.vectorizer.fit_transform(self.documents)
 
         if not any(hasattr(self.pretrained_model, attribute) for attribute in self.lm_head_namings):
             raise ValueError("The model does not have a language model head, please use a model that has one.")
@@ -381,24 +388,32 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
 
         return documents
     
-    def retrieve_top_documents(user_prompt, path= "../documents", top_k=3):
+    def retrieve_top_documents(self, user_prompt, tokenizer, path= "../documents", top_k=3):
         """
         Retrieve the top k documents based on the given query.
 
         Args:
             user_prompt (`str`): The query to retrieve the documents.
+            tokenizer (`PreTrainedTokenizerBase`): The tokenizer used to tokenize the input data.
             path (`str`): The path to the documents.
             top_k (`int`): The number of documents to retrieve.
         Returns:
             top_documents (`list`): A list of top k documents.
         """
-        top_documents = []
 
-        # TODO
+        # Vectorize the query
+        query_vector = self.vectorizer.transform([user_prompt])
 
-        return None
+        # Calculate cosine similarity between the query and all documents
+        similarities = cosine_similarity(query_vector, self.document_vectors).flatten()
+
+        # Get the indices of the top_k documents with highest similarity scores
+        top_indices = np.argsort(similarities)[-top_k:]
+
+        # Retrieve the corresponding documents
+        return [documents[i] for i in reversed(top_indices)]
     
-    def generate_rag_answer(self, user_prompt, **generate_kwargs):
+    def generate_answer_with_rag(self, user_prompt, **generate_kwargs):
         # Retrieve documents based on the input prompt
         retrieved_docs = retrieve_top_documents(user_prompt)
         augmented_prompt = user_prompt + '\nAnswer the question above based on the following informations:' + ' '.join(retrieved_docs)
