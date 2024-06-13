@@ -1,0 +1,6 @@
+{
+  "team_name": "JIM",
+  "task_type": "causal_lm",
+  "policy_acc": 0.1921921921921922,
+  "rag_policy_acc": 0.19019019019019018
+}
