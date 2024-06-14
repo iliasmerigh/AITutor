@@ -9,6 +9,7 @@ accelerate
 torch
 bitsandbytes
 peft
+faiss
 faiss-cpu
 faiss-gpu
 sentence-transformers
