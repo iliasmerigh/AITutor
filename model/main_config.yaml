@@ -2,7 +2,7 @@
 "eval_method": ["mcqa", "rag"] # mcqa, reward, rag, quantiz
 "task_type": "causal_lm" # causal_lm, seq2seq
 "policy_model_path": "./checkpoints/MCQA_model/" # HF repo id: mya-coder/mcqa-policy-jim-model (https://huggingface.co/mya-coder/mcqa-policy-jim-model)
-"reference_model_path": "./checkpoints/model_SFT_final/" # HF repo id: mya_coder/reference_jim_model (https://huggingface.co/mya-coder/reference-jim-model)
+"reference_model_path": "./checkpoints/model_SFT_final/" # HF repo id: mya-coder/reference-jim-model (https://huggingface.co/mya-coder/reference-jim-model)
 "quantized_policy_model_path": "./checkpoints/best_model_quantized/" # Your path to the final quantized checkpoint
 "rag_policy_model_path": "./checkpoints/MCQA_model/" # HF repo id: mya-coder/mcqa-policy-jim-model (https://huggingface.co/mya-coder/mcqa-policy-jim-model)
 "test_data_path": "./datasets/test/mcq_test_dataset_1000.jsonl" # Your path to the test data
