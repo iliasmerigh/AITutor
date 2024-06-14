@@ -1,18 +1,28 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/NXyI9KHk)
 # CS-552 - Final submission
 
-Welcome to the final step of your MNLP project! As you can read in the [project description](https://docs.google.com/document/d/1SP8SCHPOZZGEhs2ay-38FjedRE1bS9Q99VJb28eHoYk/edit?usp=sharing), you have 2 main deliverables: 
-1. Your final model - including its augmented counterpart(s)
-3. The final report
+## Running the Project
 
+To test and run the project, please follow the steps outlined below:
 
-## Repo Structure
+- Navigate to the [model](model) folder
+- Ensure all dependencies are installed:
+  ```bash
+  pip install -r requirements.txt
+  ```
+- Run the file [evaluator.py](model/evaluator.py):
+  ```bash
+  python3 evaluator.py
+  ```
 
-The repo has 4 folders, 2 of which serve for you to submit the deliverables:
-1. `_templates` contains the latex template for your final report. You MUST use this template.
-2. `_tests` contains some scripts which run automated tests so you can be sure your submission is correctly formatted (e.g., that the right files exist in the right place). **Importantly, if your team is NOT implementing RAG, you should change the first line of `_tests/model_rag_validator.py` into `IMPLEMENTING_RAG = False`.**
-3. `model` should contain your final models and your model-related implementation files (this includes any file for training, inference, quantization, RAG, and other necessary functions needed for the evaluator to execute successfully). Your implementation should be compatible with the [provided code template](https://github.com/CS-552/project-code-2024).
-4. `pdfs` should contain a single pdf file, your final report (named `<YOUR-GROUP-NAME>.pdf`).
+Execution takes about 5 minutes to output a result, with a GPU-L4.
 
-## Running the tests manually
-The autograding tests run automatically with every commit to the repo. Please check M1's repo for instructions on running the tests manually if you wish to do so.
+## ⚠️ Important Comment About the Evaluator Process
+We have uploaded our reference and policy models to Hugging Face under the following public repositories:
+
+- Reference model: [mya-coder/reference-jim-model](https://huggingface.co/mya-coder/reference-jim-model/tree/main)
+- Policy model: [mya-coder/policy-jim-model](https://huggingface.co/mya-coder/policy-jim-model/tree/main)
+
+However, when executing the [evaluator.py](evaluator.py) script and referencing these HF repositories in the [main_config.yaml](main_config.yaml) file, we achieve a policy reward accuracy of `0%`. This issue seems to be related to accessing the models. Consequently, we opted to run the [evaluator.py](evaluator.py) script by directly accessing the reference and policy models from our Git repository. You can locate the reference model under [checkpoints/model_SFT_final](checkpoints/model_SFT_final) and the policy model under [checkpoints/model_output_dpo_nectar](checkpoints/model_output_dpo_nectar). These folders house the identical models to those we have uploaded to Hugging Face.
+
+For more clarity, we also specify the ID of each model on Hugging Face in the [main_config.yaml](main_config.yaml) file.
