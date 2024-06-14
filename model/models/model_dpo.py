@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-import faiss
+import faiss-cpu
+import faiss-gpu
 import json
 import os
 import yaml
