@@ -445,7 +445,7 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
         """
         documents = []
         
-        print("ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â³ Start loading documents (please wait a couple of minutes)")
+        print("✅ Start loading documents (please wait a couple of minutes)")
         
         # List all files in the directory
         for filename in os.listdir(folder_path):
@@ -457,7 +457,7 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
                 if document_text:  # Add non-empty text to the documents list
                     documents.append(document_text)
         
-        print(f"ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ {len(documents)} documents loaded successfully")
+        print(f"✅ {len(documents)} documents loaded successfully")
         return documents
     
     def vectorize_documents(self, documents):
@@ -473,7 +473,7 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
         """
         texts = [doc for doc in documents]
         vectorized_docs = self.vectorizer.encode(texts)
-        print("ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Documents vectorized successfully.")
+        print("✅ Documents vectorized successfully.")
         return np.array(vectorized_docs)
     
     def create_faiss_index(self, document_vectors):
@@ -490,7 +490,7 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
         dimension = document_vectors.shape[1]
         index = faiss.IndexFlatL2(dimension)
         index.add(document_vectors.astype('float32'))
-        print("ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Documents index created successfully.")
+        print("✅ Documents index created successfully.")
         return index
         
     def retrieve_documents(self, user_prompt, top_k=3):
@@ -507,7 +507,7 @@ class AutoDPOModelForCausalLM(PreTrainedModelWrapper):
         """
         query_vector = self.vectorizer.encode([user_prompt])[0]
         _, top_indices = self.index.search(np.array([query_vector]), top_k)
-        print(f"ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ {top_k} most relevant documents retrived successfully")
+        print(f"✅ {top_k} most relevant documents retrived successfully")
         return [self.documents[i] for i in top_indices.flatten()]
     
     def get_augmented_prompts(self, user_batch_prompts):
